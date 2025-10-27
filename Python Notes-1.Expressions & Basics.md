@@ -9,11 +9,11 @@ Fixed value written directly in code, such as `1`, `2`, `3`.
 
 固定値は、Pythonでは `type()` 関数を使ってその型を確認することができます。  
 在 Python 中，可以用 `type()` 來檢查常數的型態。
-
+``` python
 123      # int
 98.3     # float
 "yeepee" # string
-
+```
 ## 2️⃣ Reserved Words（予約語 / 保留字）
 Words like if, for, while, class, return are reserved.   
 変数名や関数名として使用できない、あらかじめ決められた特別な単語。  
@@ -123,6 +123,141 @@ print("Sum =", 2 + 3)
 - **Operator precedence (優先順位／運算優先序):**  
   `**` → `* / // %` → `+ -`  
   ➤ Use parentheses `()` for clarity.
+
+## 📘 Extended Reading: Modulo — Why It’s Useful  
+（剰余の使いどころ／取餘運算的應用）
+### Why `%` Is Useful
+The modulo operator returns the remainder after division.  
+It’s especially useful for:
+- **Range limiting:** keep numbers within a fixed range (e.g., cards `0–51`)  
+- **Cyclic repetition:** wrap around indices or turns  
+- **Even/Odd checks:** detect parity  
+- **Periodic triggers:** perform actions every *n* cycles  
+- **Mathematical applications:** greatest common divisor (GCD)
+
+日本語 — %（剰余）とは？
+% は「割り算の余り」を返す演算子です。
+次のような場面でとても便利です。
+- 数値を一定範囲に収めたいとき
+- 周期的に処理を繰り返したいとき
+- 偶数／奇数を判定したいとき
+- 一定間隔で処理を実行したいとき
+- 数学的な応用（最大公約数など :D
+
+取餘運算的用途
+% 是用來「取除法餘數」的運算子。  
+在以下情境中特別有用：  
+- 限制範圍（Range Limiting） — 將數值固定在某範圍內  
+- 循環重複（Wrap-around） — 到尾端自動回到開頭  
+- 判斷奇偶（Even/Odd Check）  
+- 週期執行（Periodic Trigger） — 每隔固定次數執行  
+- 數學應用（Math） — 求最大公因數
+
+#### 🔹 基本
+```python
+10 % 3 = 1   # 10 ÷ 3 の余りは 1
+15 % 5 = 0   # 15 ÷ 5 は割り切れる（余りなし）
+```
+#### 🔹 範囲を制限する（Range Limiting）
+```python
+x = rand() % 52   # 結果は 0〜51
+```
+#### 🔹 周期的に繰り返す（Wrap-around）
+```python
+i = (i + 1) % n   # 最後まで行ったら 0 に戻る
+```
+#### 🔹 偶数・奇数の判定（Even/Odd Check）
+```python
+if n % 2 == 0:
+    print("偶数")
+else:
+    print("奇数")
+```
+#### 🔹 一定間隔で処理（Periodic Trigger）
+```python
+if frame % 60 == 0:
+    print("1秒ごとに実行")
+```
+#### 🔹 数学的応用（最大公約数／GCD）
+```python
+while b != 0:
+    a, b = b, a % b
+print(a)
+```
+
+## 📘 Extended Reading 2: Order of Evaluation & I/O  （演算の優先順位と入力／出力）
+
+## - Order of Evaluation (Precedence)
+---
+
+here’s how Python decides *who goes first* in a calculation.  
+Think of it like a tiny math drama — parentheses get VIP access, everyone else waits in line.
+
+Python が「どの演算を先にやるか」を決めるルールです。  
+括弧 `()` が最優先で、あとは左から順番に処理されます。
+
+| Priority | Operator(s) | Description |
+|:----------:|:-------------|:-------------|
+| 1 | `()` | Parentheses first — no one cuts ahead. |
+| 2 | `**` | Exponent (power) — strong and silent. |
+| 3 | `*`, `/`, `%` | Multiplication, division, modulo — same level, left to right. |
+| 4 | `+`, `-` | Addition and subtraction — chill at the end. |
+
+💡 **Left → Right rule:**  
+When operators share the same level, Python reads them left to right. Simple.  
+同じレベルの演算子は **左から右へ** 処理されます。  
+同一層級的運算符是「從左到右」處理。
+
+---
+
+## 🧮 Conversions — `int()`, `float()`
+
+Sometimes you gotta **force Python to change its mind** —  
+that’s what conversion functions are for. You tell Python:  
+“Hey, this string? Pretend it’s a number now.”
+
+明示的に型を変換するための関数です。  
+Python に「これ文字列じゃなくて数値として扱って！」とお願いするイメージです。
+
+
+```python
+float(99)     # 99.0
+int("123")    # 123
+float("123")  # 123.0
+int("x")      # ValueError（数字ではないため）
+```
+### 💬 Input & Output — input() and print()
+
+When you run your script, Python’s like: **“Hey human, gimme something to work with.”**  
+プログラムの基本構造はこうです：
+- 入力（Input）：キーボード・ファイルなどからデータを取得
+- 処理（Processing）：計算や変換を行う
+- 出力（Output）：結果を表示
+
+| Function | Description | Example | Output |
+|:--|:--|:--|:--|
+| `input()` | Waits for user input (always returns a string) | `name = input("Who are you? ")` | *(user types…)* |
+| `print()` | Displays output; separates arguments with spaces | `print("Welcome,", name)` | `Welcome, Lillian` |
+
+```python
+name = input("Who are you? ")
+print("Welcome,", name)
+```
+
+#### 🏢 Example: The Elevator Program （エレベーター換算プログラム／電梯樓層換算程式）
+
+```python
+# Convert European elevator floor to US floor
+inp = input("Europe floor? ")    # Input (string)
+usf = int(inp) + 1               # Processing (convert & add)
+print("US floor", usf)           # Output
+```
+
+
+
+
+
+
 
 
 
