@@ -1,14 +1,13 @@
 # Learning-Portfolio
 Hi! I'm Erika . This page records my progress in Data Science &amp; NLP.
+
 # About This Project
-# 🐍 Learning Python (Properly This Time)
-Because apparently, writing a sketchy potion-bidding bot for *Neopets* years ago doesn’t count as “real experience.” 😅  
+###🐍 Learning Python (Properly This Time)
+Back in the day, I actually played around with Python not for school, but for fun. 
+I used to build a little script that could automatically bid on healing potions in Neopets (yes, that browser game from the 2000s). 
+It was completely out of curiosity no structure, no formal training, just me figuring things out step by step.
 
-Back then, I built a small script that could automatically bid on  potions.
-No formal training, no tutorials, just me figuring things out step by step for fun.  
-
-Now, I’m back to learn Python, documenting my progress, keeping notes on what I’ve learned,  
-and (hopefully) showing how far I’ve come since that first messy potion-sniping bot.  
+This repo is my attempt to finally learn Python the right way documenting my progress, building small projects, and hopefully showing how far I’ve come since that first messy potion-sniping bot.
 
 ---
 
