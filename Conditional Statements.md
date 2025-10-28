@@ -15,7 +15,7 @@ Sequential execution just runs line by line, but with conditions, the program be
 
 ---
 
-### 2️⃣ Indentation インデント／縮排）
+### 2️⃣ Indentation （インデント／縮排）
 
 Indentation shows which lines belong to which block.  
 Python uses **indentation instead of braces `{}`**, usually 4 spaces.  
@@ -48,16 +48,10 @@ Python 不用 `{}`，而是靠縮排（通常 4 個空格）。
 
 ---
 
-### 4️⃣ `if ... else`  
-（もし〜なら／如果...否則）
+### 4️⃣ `if ... else` （もし〜なら／如果...否則）
 
-#### 🇬🇧 EN
-The `else` clause runs when the `if` condition is `False`.
-
-#### 🇯🇵 日本語
-`if` の条件が `False` のときに `else` ブロックが実行されます。
-
-#### 🇨🇳 中文
+The `else` clause runs when the `if` condition is `False`.    
+if` の条件が `False` のときに `else` ブロックが実行されます。
 當 `if` 條件為 `False` 時，會執行 `else` 區塊。
 
 ```python
@@ -66,3 +60,33 @@ if x > 10:
     print("Big")
 else:
     print("Small")
+```
+### 5️⃣ Multi-way Decisions — elif （複数分岐／多條件判斷）
+
+elif = “else + if” → for multiple choices.
+Python checks top to bottom; first True wins, the rest are ignored.
+
+elif は “else + if”。複数の条件を順に評価し、最初に True になったブロックだけが実行されます。
+
+elif 是 “else + if”，用來進行多條件判斷。
+Python 從上到下檢查，第一個為 True 的條件就執行，後面都略過。
+
+```python
+if x < 2:
+    print("Small")
+elif x < 10:
+    print("Medium")
+else:
+    print("Large")
+``` 
+### 6️⃣ Common Pitfall （ありがち失敗／常見坑）    
+Putting x < 20 before x < 10 causes smaller numbers to match early and skip the rest.
+一度マッチしたブロックがあれば、その下は実行されません。条件の順序に注意。    
+只要上面條件成立，下面的就不會執行。寫程式要注意條件順序。    
+
+```python
+if x < 20:      # ← catches everything below 20
+    ...
+elif x < 10:    # ← never reached
+    ...
+``` 
