@@ -4,13 +4,6 @@ Task 1 寫作改法(Chatgpt)
 
 ---
 
-### 🧩 Introduction
-
-| **Your Original Sentence**                                                                                                                      | **Upgraded Band 8 Version**                                                                                                                       |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| This chat illustrates the different levels of post school qualification in Australia and the proportion of men and woman who held them in 1999. | The chart illustrates the different levels of post-school qualifications in Australia and the proportions of men and women who held them in 1999. |
-
----
 
 ### 🧩 Overview
 
@@ -27,6 +20,15 @@ Task 1 寫作改法(Chatgpt)
 | The second largest was recorded among women who held undergraduate diploma (70%) , followed by men who held postgraduate diploma(70%), which represented owning an bachelor degree wasn’t a crucial thing in Australia, 1999. | The second largest proportion was among women holding an undergraduate diploma (70%), followed by men with a postgraduate diploma (70%). This shows that holding a bachelor’s degree was comparatively less common in Australia in 1999. |
 | Despite the highest proportions, women who held skilled vocational represented the most marginal absolute count.                                                                                                              | Despite these high figures for men, women holding skilled vocational diplomas accounted for the smallest proportion overall.                                                                                                             |
 | This suggests that women lending to not training hand on skills or practicing for a specific career or profession.                                                                                                            | This suggests that women were less likely to pursue hands-on or practical training for specific careers or professions.                                                                                                                  |
+
+
+🔍 Grammar Notes:
+
+“Overall,” → IELTS Task 1 概述段的常見起頭副詞。  
+“men dominated” → 動詞 dominate + object 表「佔主要比例、佔優勢」。  
+“particularly in …” → 副詞用法，指出最突出的類別。  
+“while + clause” → 對比連詞，形成對稱句。  
+“outnumbered” → 動詞 outnumber + object = 「數量超過」。  
 
 ---
 
