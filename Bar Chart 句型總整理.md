@@ -87,3 +87,35 @@
 - ✅ 考官要的是「準確＋自然」，不是「華麗」。  
 
 ---
+# 💋 Mercy × Moira — The Bar Chart of Desire  
+*(IELTS Task 1 Fanfic Sentence Training)*  
+
+| **English** | **中文** |
+|--------------|----------|
+| The bar chart compares two scientists in one lab—how often they look at data, and how often they look at each other. | 長條圖比較了兩位科學家——她們在實驗室裡看數據的頻率，以及看對方的頻率。 |
+| Overall, the level of tension between them was significantly higher than any measurable variable. | 整體而言，她們之間的張力遠高於任何可量化的變項。 |
+| Moira accounted for nearly 85% of the provocations observed, while Mercy contributed the remaining 15%, though every gesture was statistically devastating. | 莫伊拉佔了將近 85% 的挑釁行為，而慈悲佔其餘 15%，但每一個眼神都足以造成統計上的毀滅性影響。 |
+| Mercy’s restraint stood at only 10%, a figure lower than the temperature in Moira’s gaze. | 慈悲的克制力僅有 10%，比莫伊拉眼神的溫度還低。 |
+| By contrast, Moira’s composure dominated the entire dataset—at least until Mercy smiled. | 相比之下，莫伊拉的鎮定支配了整個數據集——至少直到慈悲微笑為止。 |
+| The difference between them was twice as intense as the baseline of human curiosity. | 她們之間的差異是人類好奇心基準值的兩倍之強。 |
+| In summary, the experiment confirmed one hypothesis: in this lab, emotion outnumbered reason. | 總而言之，實驗驗證了一項假設：在這間實驗室裡，情感遠遠超過理性。 |
+
+---
+
+## 🧠 IELTS Task 1 Grammar Notes  
+
+| 句型 | 含義 |
+|------|------|
+| **The bar chart compares …** | 開頭句型，用來引出主題（這裡成了「比誰更盯著誰看」） |
+| **Overall, …** | 概述整體趨勢 |
+| **accounted for …** | 表「佔 ⋯ 比例」 |
+| **stood at … %** | 表示數據值 |
+| **dominated …** | 表「主導、佔優勢」 |
+| **difference between A and B was twice as … as …** | 比較句型（兩倍之多） |
+| **In summary, …** | 收尾句型，總結趨勢 |
+
+---
+
+> 🪶 *“Data is merely a mirror,” Moira said, tilting her head.*  
+> *“And right now, it reflects you trembling.”*  
+> *Mercy adjusted her glasses,
