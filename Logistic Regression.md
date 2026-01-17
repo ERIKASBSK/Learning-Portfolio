@@ -157,3 +157,234 @@ it basically convert any real-valued score into a probability (0 to 1)
 - If $\theta^T x^{(i)}$ is very negative → $h \approx 0$
 - If $\theta^T x^{(i)} = 0$ → $h = 0.5$
 
+### Sample
+
+1. Original text: `@YMourri and @AndrewYNg are tuning a GREAT AI model`
+2. After preprocessing `[tun, ai, great, model]`
+3. turn it into 3 numbers 
+
+$$
+x^{(i)}=[1,\ 3476,\ 245]
+$$
+
+- 1 = bias
+- 3476 = sum of positive word frequencies (pos_sum)
+- 245 = sum of negative word frequencies (neg_sum)
+
+4. turn it into a probability
+
+$$
+\theta=[0.00003,\ 0.00150,\ -0.00120]
+$$
+
+5. then computes the score
+
+$$
+\theta^{T}x^{(i)}=4.92
+$$
+
+## Note7 — Gradient Descent
+
+θ (theta) = the three knobs of the model (the weights for bias, pos_sum, and neg_sum).
+J(θ) / Cost / Loss = a score that measures “how bad the model currently is.”
+
+<img width="1039" height="590" alt="image" src="https://github.com/user-attachments/assets/87516bc6-8842-4455-a887-f1a430a51873" />
+
+### Sample
+
+#### 1) Initialize parameters
+
+#### 2) Classify / Predict
+
+$$
+h = h(X,\ \theta)
+$$
+
+- X = your data matrix (m×3), where each row is a tweet’s [1, pos_sum, neg_sum].
+- h = your predicted probabilities (one value between 0 and 1 for each tweet).
+
+#### 3) Measure “how far off am i” → the gradient (Get gradient).
+
+$$
+\nabla = \frac{1}{m} X^{T}(h - y)
+$$
+
+- y = the ground-truth labels (1 = positive, 0 = negative)
+- (h - y) = how much my prediction is off for each tweet
+
+
+#### 4) then Update theta
+
+$$
+\theta = \theta - \alpha \nabla
+$$
+
+- α (alpha) = the learning rate: how big a step i take each time when i turn the knobs
+- Too large: it may overshoot and diverge.
+- Too small: training becomes painfully slow.
+
+#### 5) how bad am i 
+then we finally get a
+
+$$
+J(\theta)
+$$
+
+-  → repeat →  Until good enough
+
+
+#### 6) Intuition 
+ <img width="935" height="392" alt="image" src="https://github.com/user-attachments/assets/1c623c5d-f963-4659-aa79-a5c8e716b95e" />
+
+- Iteration: how many times you repeat the update step.
+
+- Cost (loss): how bad the model currently is.
+
+## Note8 — Validation
+
+#### 1) what is validation set?  
+   Data set aside during training is called the validation set
+
+- X_val: the validation set features.
+- Y_val: the validation set ground-truth labels.
+
+#### 2) how to do preditction
+  Compute probabilities using sigmoid
+
+$$
+h = \sigma(X_{\text{val}}\theta)
+$$
+
+#### 3) Use threshold 0.5 to convert probability to class label.
+for instance: 
+
+- `
+0.3 → 0
+0.8 → 1
+0.5 → 1
+`
+- eventually ill get  a preditction
+
+$$
+\hat{y} = [0, 1, 1, \dots]
+$$
+
+
+#### 4) Get the accuracy
+- Compare predictions with true labels.(Y_val)
+- Match = 1, mismatch = 0.
+
+$$
+\text{correct} = [\hat{y}^{(1)} = y^{(1)},\ \hat{y}^{(2)} = y^{(2)},\ \dots]
+$$
+
+- then we got accuracy
+
+$$
+\[
+\text{accuracy}=\frac{\text{number of correct predictions}}{m}
+\]
+$$
+
+
+
+#### 5) Accuracy measures how often the predictions are correct.  
+- accuracy = 0.5 → 50% correct (about as good as random guessing)
+- accuracy = 0.8 → 80% correct (pretty good)
+
+## Note8 — Logistic Regression Cost Function
+
+#### 1) What is Logistic Regression Cost Function
+- The **cost function** measures **how wrong** my model is
+- It sums up how far the predicted probabilities are from the true labels across all examples, so training can use **gradient descent** to minimize it.
+
+$$
+J(\theta) = -\frac{1}{m}\sum_{i=1}^{m}\Big(y^{(i)}\log(h^{(i)}) + (1-y^{(i)})\log(1-h^{(i)})\Big)
+$$
+
+- Average loss over **m** examples.
+#### 2) Single example intuition
+- Single example intuition = understanding how the cost behaves on just one training example.
+
+- Case 1: 
+
+$$ 
+\(y=1\)
+$$
+
+$$
+\[
+\text{cost}=-\log(h)
+\]
+$$
+
+If you predict h = 0.99 → great, you’re almost correct (tiny cost).
+If you predict h = 0.01 → you’re confidently wrong (huge cost).
+
+- Case 2:
+
+$$ 
+\(y=0\)
+$$ 
+
+$$ 
+\[
+\text{cost}=-\log(1-h)
+\]
+$$
+
+If you predict h = 0.01 → great, you’re almost correct (tiny cost).
+If you predict h = 0.99 → you’re confidently wrong (huge cost).
+
+## Note9 — Overview
+
+### 1) Every iteration does this:
+
+- Use the current **θ** to predict → get probabilities **h**
+- Measure errors → **(h − y)** (too high / too low shows up here)
+- Combine all errors into an update direction → the **gradient**
+- Update the parameters:
+
+$$
+\theta := \theta - \alpha \cdot \text{gradient}
+$$
+
+- **α** = learning rate (step size)
+- Repeat until the **cost stops decreasing**.
+
+### 2) General version:
+
+$$
+\theta_j := \theta_j - \alpha \frac{\partial}{\partial \theta_j} J(\theta)
+$$
+
+- Meaning: each parameter **θ** updates a little bit in its own direction.
+
+### 3) Logistic Regression-specific:
+
+$$
+\theta_j := \theta_j - \alpha \frac{1}{m}\sum_{i=1}^{m}\left(h^{(i)} - y^{(i)}\right)x_j^{(i)}
+$$
+
+- Meaning: Update **θ** by summing **(error × that feature)** over all examples, then averaging it to adjust **θ**.
+
+### 4) vectorized version (much faster):
+
+$$
+\theta := \theta - \alpha \frac{1}{m}X^T(h - y)
+$$
+
+- Meaning: No for-loop needed — one matrix multiplication does it all.
+
+### 5) Core formulas to remember 
+
+- Predict probabilities with the current parameters:  
+  $$h = \sigma(X\theta)$$
+
+- Measure how wrong the predictions are and turn it into an update direction:  
+  $$\text{gradient} = \frac{1}{m}X^T(h-y)$$
+
+- Update the parameters by taking a small step to reduce the cost:  
+  $$\theta := \theta - \alpha \cdot \text{gradient}$$
+
+Repeat until the cost stops going down.
