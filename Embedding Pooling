@@ -1,0 +1,356 @@
+# Note 1 — What this section is about
+i’m building a neural network that takes a tweet → and outputs **positive / negative probabilities**.
+
+---
+
+# Note 2 — The basic neural network flow (forward propagation)
+A neural network is basically a stack of layers that:
+
+- takes an input vector \(x\)
+- does computations layer by layer
+- produces an output vector (here: sentiment probabilities)
+
+They call the left→right computation **forward propagation**.
+
+I label the input as:
+
+$$
+\[
+a^{(0)} = x
+\]
+$$
+
+Then for each layer \(i\):
+
+$$
+\[
+z^{(i)} = W^{(i)} a^{(i-1)} + b^{(i)}
+\]
+\[
+a^{(i)} = g(z^{(i)})
+\]
+$$
+
+Where:
+
+$$ \(W^{(i)}\) $$ 
+
+= weights
+
+$$  \(b^{(i)}\) $$ 
+
+= bias
+
+$$  \(g(\cdot)\) $$ 
+
+= activation function (like ReLU)
+
+My brain translation:
+> multiply + add → activation → repeat.
+<img width="956" height="460" alt="image" src="https://github.com/user-attachments/assets/d475a683-784a-4761-a6e4-315249d63457" />
+
+---
+
+# Note 3 — The exact network i will implement
+For this assignment, the network is:
+
+**Integer tweet vector → Embedding layer → Hidden layer (ReLU) → Output (Softmax)**
+
+Embedding is important because my input is just word IDs (integers),
+so the embedding layer converts them into dense vectors that the network can learn from.
+
+---
+
+# Note 4 — Turning a tweet into an integer vector
+Before the neural network, i need a vocabulary:
+
+$$
+\[
+\text{word} \rightarrow \text{id}
+\]
+$$
+
+Example:
+`["this", "movie", "was", "good"]`  
+→ `[12, 98, 7, 301]`
+
+### Python (build word→id mapping)
+```python
+texts = [
+    "this movie was good",
+    "this movie was almost good"
+]
+
+tokens = [w for s in texts for w in s.split()]
+vocab = sorted(set(tokens))
+
+word2id = {w: i+1 for i, w in enumerate(vocab)}  # i start from 1
+word2id["<PAD>"] = 0  # padding token
+
+word2id
+```
+
+### Python (convert tweet → integer vector)
+```python
+def encode_tweet(tweet, word2id):
+    return [word2id.get(w, 0) for w in tweet.split()]
+
+encode_tweet("this movie was good", word2id)
+```
+
+---
+
+# Note 5 — Padding (making all tweets the same length)
+Tweets have different lengths, but the neural network wants consistent shapes.
+
+So i do **padding**:
+- find `max_len`
+- fill shorter tweets with `0` (`<PAD>`)
+
+Example:
+- `[12, 98, 7]`
+- `[12, 98, 7, 301, 44]`
+
+If max_len = 5:
+- `[12, 98, 7, 0, 0]`
+- `[12, 98, 7, 301, 44]`
+
+### Python (pad sequences)
+```python
+def pad(seq, max_len, pad_id=0):
+    return seq + [pad_id] * (max_len - len(seq))
+
+seqs = [encode_tweet(s, word2id) for s in texts]
+max_len = max(len(s) for s in seqs)
+
+padded = [pad(s, max_len) for s in seqs]
+padded
+```
+
+---
+
+# Note 6 — Output layer = softmax probabilities
+The final layer uses **softmax** to output probabilities.
+
+For 2 classes:
+- negative
+- positive
+
+$$
+\[
+\hat{y} = [P(\text{neg}),\; P(\text{pos})]
+\]
+$$
+
+### Python (softmax intuition)
+```python
+import numpy as np
+
+def softmax(z):
+    z = np.array(z, dtype=float)
+    z = z - np.max(z)          # stability trick
+    e = np.exp(z)
+    return e / e.sum()
+
+softmax([1.2, 2.8])   # example logits
+```
+
+---
+
+# Note 7 — Why this beats Naive Bayes (the “almost good” example)
+A tweet like:
+
+> "this movie was almost good"
+
+is tricky because it contains **good**, but the vibe is not fully positive.
+
+Naive Bayes might over-focus on “good”.
+
+But the neural network can learn patterns like:
+- `almost + good` ≠ truly positive
+
+because embeddings + hidden layer allow more nuanced learning.
+<img width="981" height="385" alt="image" src="https://github.com/user-attachments/assets/d375f27a-8231-44a5-a26b-4b4b3cb296fb" />
+
+---
+# Note 8 — What embedding layer does (my version)
+
+In NLP, i first turn words into **integer IDs** using a vocabulary:
+
+- `"i"` → 5  
+- `"nlp"` → 88  
+- `"happy"` → 27  
+
+But integers are useless for meaning, so i use an Embedding layer to map:
+
+```math
+\text{word\_id} \rightarrow \text{dense vector}
+```
+
+Example idea (embedding\_dim = 2):
+- `"i"` →
+
+$$
+[0.020,\;0.006]
+$$
+
+- `"nlp"` →
+
+$$ [-0.009,\;0.050] $$
+
+
+These numbers are **trainable**, meaning the model learns them to fit my task.
+<img width="960" height="389" alt="image" src="https://github.com/user-attachments/assets/e39e33d0-cfc4-4767-8e9d-d91c40bbd787" />
+
+---
+
+# Note 9 — Embedding = a trainable lookup table
+Embedding is basically a weight matrix:
+
+$$
+E \in \mathbb{R}^{V \times d}
+$$
+
+Where:
+
+$$
+V
+$$
+
+= vocabulary size  
+
+$$
+d
+$$ 
+
+= embedding dimension (a hyperparameter i choose)
+
+If i input a word ID = $$k$$, the embedding layer returns row $$E_k$$.
+
+### Python (shape intuition)
+```python
+V = 10000      # vocab size
+d = 128        # embedding dim
+# embedding table E has shape (V, d)
+# each word id returns a vector of length d
+```
+
+---
+
+# Note 10 — What happens to a tweet after embedding
+If my tweet is:
+
+`"i'm happy"`
+
+After i convert it into IDs:
+- `[id("i'm"), id("happy")]`
+
+Embedding turns it into a matrix:
+
+$$
+\text{Embedding output} \in \mathbb{R}^{L \times d}
+$$
+
+Where:
+- $$L$$ = number of tokens in the tweet  
+- $$d$$ = embedding dim  
+
+So the embedding layer returns **one vector per token**.
+
+### Python (super simplified pipeline)
+```python
+tweet_ids = [5, 27, 90]      # example ids for ["i", "am", "happy"]
+# embedding(tweet_ids) -> matrix of shape (L, d)
+# here: (3, d)
+```
+
+---
+
+# Note 11 — The “problem” if i flatten everything
+If i have padded tweets of max length $$L$$, embedding gives:
+
+$$
+(L \times d)
+$$
+
+If i flatten that and feed into Dense, parameter count gets big:
+
+- input size = $$L \cdot d$$  
+- Dense weights = $$ (L\cdot d) \times h $$
+
+So longer sequences = more parameters = harder training.
+
+That’s why they introduce the **mean layer**.
+
+---
+
+# Note 12 — Mean layer (mean pooling) = fixed size sentence vector
+Mean layer takes the embedding matrix and returns ONE vector:
+
+$$
+\vec{s} = \frac{1}{L}\sum_{t=1}^{L}\vec{e_t}
+$$
+
+So output shape becomes:
+
+$$
+\vec{s} \in \mathbb{R}^{d}
+$$
+
+Key point:
+- mean layer has **no trainable parameters**
+- it just averages, so sentence length doesn’t explode my network
+
+### Python (mean pooling)
+```python
+import numpy as np
+
+# emb: shape (L, d)
+emb = np.random.randn(5, 3)   # 5 tokens, embedding dim 3
+sent_vec = emb.mean(axis=0)   # shape (d,)
+sent_vec
+```
+
+---
+
+# Note 13 — Padding + mean pooling (a small trap)
+If i use padding with `<PAD>=0`, then my embedding matrix includes padded tokens too.
+
+If i do a naive mean, padding can slightly mess up the average.
+
+So ideally i use a mask:
+
+$$
+\vec{s}=\frac{\sum_{t=1}^{L} m_t \vec{e_t}}{\sum_{t=1}^{L} m_t}
+$$
+
+Where:
+- $$m_t = 1$$ for real tokens  
+- $$m_t = 0$$ for padding  
+
+### Python (masked mean pooling)
+```python
+import numpy as np
+
+emb = np.random.randn(6, 4)          # (L=6, d=4)
+mask = np.array([1,1,1,0,0,0])       # first 3 real, last 3 are PAD
+
+masked_sum = (emb * mask[:, None]).sum(axis=0)
+masked_mean = masked_sum / (mask.sum() + 1e-12)
+masked_mean
+```
+
+---
+
+# Note 14 — My layer toolkit so far
+So now i have 4 basic layers i can combine:
+
+- Embedding (learn word vectors)
+- Mean (convert token matrix → sentence vector)
+- Dense (linear transform)
+- ReLU (nonlinearity)
+
+This is enough for a simple sentiment classifier:
+
+**IDs → Embedding → Mean → Dense + ReLU → Dense → Softmax**
+
