@@ -1,4 +1,4 @@
-<img width="977" height="331" alt="image" src="https://github.com/user-attachments/assets/74fd71ca-1eaf-44af-b79a-302cb6a478b5" /># Note 1 - Co-occurrence Matrix
+# Note 1 - Co-occurrence
 
 ## What this part is doing
 Goal: **turn text into vectors** → so I can compute **similarity** between words / documents.
@@ -65,7 +65,7 @@ def build_cooc(tokens, k=2):
 M, vocab, word2id = build_cooc(tokens, k=2)
 vocab, M
 ```
-#　NOTE 2 - Example: vector for data
+# NOTE 2 - Example: vector for data
 Assume my context vocab is:
 
 - `simple`
@@ -132,6 +132,7 @@ def cosine(a, b, eps=1e-12):
 
 cosine(M[word2id["data"]], M[word2id["simple"]])
 ```
+<img width="924" height="349" alt="image" src="https://github.com/user-attachments/assets/77049424-808e-4cb4-9505-cd2261b6703d" />
 
 ### (2) Euclidean distance (distance-based)
 
@@ -248,152 +249,271 @@ cosine(eco_vec, ml_vec), cosine(ent_vec, ml_vec)
 
 # Note 3 Extra (my nlp work)
 
-## My “I got stuck and figured it out” notes (co-occurrence matrix edition)
+## 0) My mental model (so I don’t get lost)
+After the Vector Space Model chapter, I forced myself to summarize my app like this:
 
-### 1) My counts looked wrong → it was the window boundary + self-counting
-At first my matrix numbers didn’t match my intuition, and it was usually because:
+- Every JP meme sentence → a vector **doc_vec**
+- My English query → a vector **query_vec**
+- Similarity score = **cosine similarity**
+- Top results = documents with the highest similarity score
 
-- I accidentally **counted the target word itself** as context  
-- I forgot that words near the **beginning/end** of a sentence have **smaller windows**
+So my whole search pipeline is basically:
 
-So my loop must do:
-
-- context range = `[i-k, i+k]` (clipped to valid indices)
-- skip `j == i`
-
-```python
-left = max(0, i-k)
-right = min(len(tokens), i+k+1)
-
-for j in range(left, right):
-    if j == i:
-        continue
-    M[target_id, context_id] += 1
-```
+$$
+\[
+\text{score}(q,d)=\cos(\vec q,\vec d)
+\quad\Rightarrow\quad
+\text{pick top-}k
+\]
+$$
 
 ---
 
-### 2) “Should the matrix be symmetric?” → depends on how I count
-I kept wondering why `M[i,j] != M[j,i]`.
-
-That’s normal if I do **directional counting** (target→context).  
-If I want symmetry, I can manually add both directions:
-
-```python
-M[wi, cj] += 1
-M[cj, wi] += 1   # optional: force symmetry
-```
-
-I just need to stay consistent, because **cosine similarity depends on the vector definition**.
-
----
-
-### 3) My vectors were dominated by boring frequent words → I needed filtering
-When I used raw counts, the “top neighbors” became stuff like:
-
-- `the`, `and`, `to`, `is` (or super common tokens)
-
-So I either:
-
-- remove stopwords  
-- set `min_count` (drop rare/too common words)
-- or upgrade weighting later (TF-IDF / PPMI)
-
-I remind myself: **counts ≠ meaning**, counts are just the starting point.
-
----
-
-### 4) My `data` vector didn’t look like `[2,1,1,0]` → vocabulary order issue
-Even if the counts are correct, the vector can look “wrong” if my vocab ordering is different.
-
-To debug, I always print `(word, value)` pairs:
-
-```python
-data_vec = M[word2id["data"]]
-list(zip(vocab, data_vec))
-```
-
-That way I don’t lie to myself with raw arrays.
-
----
-
-### 5) “Cosine vs dot product” finally clicked when I saw normalization
-I kept mixing these two:
-
-- dot product: \(\vec a \cdot \vec b\)
-- cosine similarity: \(\frac{\vec a\cdot\vec b}{\|\vec a\|\|\vec b\|}\)
-
-The shortcut rule I wrote down:
-
-✅ **If vectors are L2-normalized, dot product ≈ cosine similarity**
-
-So if I normalize my vectors first:
-
-```python
-def l2norm(v, eps=1e-12):
-    return v / (np.linalg.norm(v) + eps)
-
-a_hat = l2norm(a)
-b_hat = l2norm(b)
-score = a_hat @ b_hat  # this is cosine
-```
-
-This is also why in retrieval systems, people normalize embeddings and then just do `emb.dot(query)`.
-
----
-
-### 6) I hit a division-by-zero bug → some vectors can be all zeros
-Sometimes a word gets a zero vector (no valid contexts, filtered out, etc.).  
-So I always keep an epsilon:
+## 1) “Why is my dot product called cosine?” → because I normalized everything
+At first I thought I **must** implement cosine explicitly:
 
 \[
-\hat{v}=\frac{v}{\|v\|+\epsilon}
+\cos(\theta)=\frac{\vec q\cdot\vec d}{\|\vec q\|\|\vec d\|}
 \]
 
+But I already normalize vectors here:
+
 ```python
-eps = 1e-12
-v = v / (np.linalg.norm(v) + eps)
+def norm_rows(x):
+    x = np.asarray(x, dtype=np.float32)
+    norms = np.linalg.norm(x, axis=1, keepdims=True)
+    norms = np.where(norms > 0, norms, EPS)
+    return x / norms
+```
+
+So after normalization, \(\|\vec q\|\approx 1\) and \(\|\vec d\|\approx 1\).  
+That means:
+
+✅ **dot product ≈ cosine similarity**
+
+So this line is fine:
+
+```python
+scores = emb.dot(query_vec)
+```
+
+And my chapter note finally “clicked”:  
+**Normalize → dot = cosine → topk retrieval**
+
+---
+
+## 2) My scores looked weird (sometimes too low / too strict) → it was my `min_score`
+I added a slider:
+
+```python
+min_score = st.slider("Match strictness", 0.0, 1.0, 0.55, 0.01)
+```
+
+Then I filter:
+
+```python
+cand = [(int(i), float(s)) for i, s in zip(idx, scores) if s >= min_score]
+```
+
+What I noticed while testing:
+- If I set `min_score` too high, I get **No match** even when results “feel” relevant.
+- Especially for short queries / slang, the score is naturally lower.
+
+So my rule became:
+- if “No match” happens too often → **lower `min_score` first**
+- the model isn’t necessarily wrong, my threshold is.
+
+---
+
+## 3) “MMR gave better variety” → because plain topk repeats the same vibe
+When I didn’t use MMR, my results were often **too similar to each other**.
+
+Plain topk:
+
+```python
+final_idx = cand_idx[:k].tolist()
+```
+
+MMR version:
+
+$$
+\[
+\text{MMR}=\lambda\cdot \text{relevance}-(1-\lambda)\cdot \text{redundancy}
+\]
+$$
+
+In code (the core idea):
+
+```python
+mmr_scores = lam * rel - (1 - lam) * max_sim
+```
+
+What I learned by playing with it:
+- **λ bigger** → more accurate but more repetitive
+- **λ smaller** → more diverse but sometimes less relevant
+
+So I keep it optional:
+
+```python
+use_mmr = st.checkbox("Use MMR...", value=False)
 ```
 
 ---
 
-### 7) Word×Word vs Word×Document: I confused myself until I wrote this
-Both are “co-occurrence”, but the meaning of axes changes.
+## 4) “MMR needs more candidates” → it can’t diversify
+I almost made the mistake of feeding MMR only the top `k` results.
 
-**Word × Word**
-- vector answers: “who does this word appear near?”
+But MMR needs a **candidate pool** first:
 
-**Word × Document**
-- vector answers: “which topic/category does this word belong to?”
+```python
+candidate_pool = max(80, k * 10)
+idx, scores = search_topk(qv, data["emb"], candidate_pool)
+```
 
-So when I compare two vectors, I must be clear what I’m comparing:
-
-- word similarity (usage neighbors)
-- topic similarity (distribution across categories)
-
-Otherwise I’ll interpret the score totally wrong.
-
----
-
-### 8) My code was slow when vocab got big → dense matrix was the problem
-A full `n × n` matrix explodes fast.
-
-If vocab is large, I should switch to:
-
-- sparse matrices (scipy)
-- or store counts in a dict first
-
-But for learning/debugging, I keep a tiny toy example first, verify logic, then scale up.
+My logic:
+- MMR is like “picking a good playlist”
+- if I only give it 12 songs, it can’t “diversify”
+- so I give it a bigger pool, then let it select the final top-k
 
 ---
 
-### Quick sanity checklist (before I trust my results)
-- [ ] Did I skip `j == i`?
-- [ ] Did I clip window boundaries correctly?
-- [ ] Is my vocab ordering consistent with my vector interpretation?
-- [ ] Am I comparing with cosine, or dot on normalized vectors?
-- [ ] Did stopwords dominate the neighbors?
-- [ ] Did any vector become zero?
+## 5) My app rejected short meme inputs too aggressively →  needed a whitelist
+I added a “weird input filter”:
+
+```python
+if strict:
+    if q_lower not in ALLOW_SHORT and junk(q):
+        st.warning("Maybe type a bit longer phrase...")
+        st.stop()
+```
+
+My original `junk()` rule:
+
+```python
+if len(q) < 3:
+    return True
+```
+
+But meme slang is often **2 letters** (`fr`, `gg`, `idk`, `jk`…), so I created `ALLOW_SHORT`:
+
+```python
+ALLOW_SHORT = {"lol","idk","fr","gg","w","l", ...}
+```
+
+So now my filter is:
+- reject random symbols / empty spam ✅
+- still allow real slang ✅
 
 ---
+
+## 6) My query embedding shape confused me → I forced it into a 1D vector
+When I embed the query, `encode()` returns a batch shape like `(1, dim)`:
+
+```python
+v = model.encode([f"query: {q}"], show_progress_bar=False)
+v = norm_rows(v)
+return v[0]
+```
+
+The key part is `v[0]`.
+
+Because later I do:
+
+```python
+scores = emb.dot(query_vec)
+```
+
+If `query_vec` accidentally stays `(1, dim)`, I risk shape weirdness.
+So I always return a clean `(dim,)` vector.
+
+---
+
+## 7) “Why do I need `query:` and `passage:` prefixes?” → E5 expects them
+I used:
+
+```python
+passages.append(f"passage: {txt}")
+v = model.encode([f"query: {q}"])
+```
+
+This wasn’t just aesthetic.
+My understanding after reading about E5 formatting:
+- the model learns “query vs document” roles
+- so prefixing helps alignment
+
+When I removed prefixes during testing, results felt less stable.
+
+So I kept the strict format:
+- `query: ...`
+- `passage: ...`
+
+---
+
+## 8) I got scared of divide-by-zero → EPS is my safety belt
+While normalizing, I realized a vector could be all zeros (rare but possible).
+
+So I used:
+
+```python
+EPS = 1e-12
+norms = np.where(norms > 0, norms, EPS)
+```
+
+This is basically:
+- “if norm is 0 → replace with EPS”
+- avoid crashing
+- still return a valid float array
+
+---
+
+## 9) My embeddings took too long to reload → cache saved my life
+Computing embeddings is expensive:
+
+```python
+emb = model.encode(passages, batch_size=64, show_progress_bar=False)
+```
+
+So I cached:
+- model once:
+
+```python
+@st.cache_resource
+def load_model():
+    return SentenceTransformer(MODEL)
+```
+
+- embeddings until CSV changes:
+
+```python
+@st.cache_data
+def load_data_and_emb(csv_mtime):
+    ...
+```
+
+And I pass `mtime` so cache invalidates correctly:
+
+```python
+mtime = os.path.getmtime(CSV_PATH)
+data = load_data_and_emb(mtime)
+```
+
+My simple rule:
+- if results don’t update after editing CSV → check `mtime` and caching logic first
+
+---
+
+## 10) Quick debugging prints I used (when I was paranoid)
+When I felt unsure, I printed only these:
+
+```python
+print(data["emb"].shape)      # (N, dim)
+print(qv.shape)               # (dim,)
+print(scores.min(), scores.max())
+print(final_idx[:5])
+```
+
+That’s enough to catch 90% of my mistakes without overthinking.
+
+---
+
 
