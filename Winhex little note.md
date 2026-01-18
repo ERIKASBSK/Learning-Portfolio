@@ -99,9 +99,3 @@
   In debugging: EIP moves forward and may step through many NOPs
 
 ---
-
-## 7) 一句話記法 / One-line memory hook
-- **NOP = 空轉一步**  
-  **NOP = a “do nothing” step**
-- **EIP = 下一站在哪**  
-  **EIP = where the next instruction is**
