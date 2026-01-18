@@ -64,7 +64,7 @@
 
 ## 5) 反組譯常見指令（助記符）/ Common disassembly mnemonics
 
-| 指令 / Instruction | 中文 | English meaning |
+| 指令 / Instruction | 中文 | English |
 |---|---|---|
 | MOV | 搬資料：A = B | move data: A = B |
 | PUSH / POP | 堆疊放入 / 取出 | push/pop stack |
