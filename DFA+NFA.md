@@ -62,42 +62,41 @@ A string is accepted **only if** we finish in an accepting state.
 ---
 
 # Note 5 — Running a DFA on a string (extended transition function)
+
 Single-step transition is:
 
-$$
+```math
 \delta(q,a)
-$$
+```
 
-But for a **whole string**, we use the **extended transition function**:
+But for a whole string, we use the extended transition function:
 
-$$
+```math
 \delta^{*}: Q \times \Sigma^{*} \rightarrow Q
-$$
+```
 
 Rules:
 
 1) Empty string does nothing:
 
-$$
+```math
 \delta^{*}(q,\epsilon)=q
-$$
+```
 
-2) For a string $$wa$$ (string $$w$$ followed by symbol $$a$$):
+2) For a string $wa$ (string $w$ followed by symbol $a$):
 
-$$
+```math
 \delta^{*}(q,wa)=\delta(\delta^{*}(q,w),a)
-$$
-
-This means: “process $$w$$ first, then process the last symbol $$a$$”.
+```
 
 ---
 
 # Note 6 — Acceptance condition (DFA)
 A string $$w$$ is accepted by DFA iff:
 
-$$
+```math
 \delta^{*}(q_0,w)\in F
-$$
+```
 
 So i always:
 1) start at $$q_0$$  
@@ -215,7 +214,7 @@ def nfa_accept(nfa, w: str) -> bool:
 
     return len(current & nfa["F"]) > 0
 
-# example format
+# example
 nfa = {
     "q0": "q0",
     "F": {"q4"},
