@@ -1,5 +1,5 @@
 
-## Supervised Learning Training Loop
+# Note 1 Supervised Learning Training Loop
 
 X → model(θ) → Ŷ → compare with Y → cost → update θ → repeat
 Turn text into numbers → guess → compare → fix mistakes → finally classify sentiment. 
@@ -8,6 +8,39 @@ Turn text into numbers → guess → compare → fix mistakes → finally classi
 2.Convert each tweet into a sparse 0/1 vector showing which words appear   
 3.but a large vocabulary makes vectors long and slows training and prediction  
 
+
+- step 1 たくさんのツイート（X）を用意して、
+- 「ポジティブ(1)」か「ネガティブ(0)」かの正解ラベル（Y）も一緒に教える。
+- コンピュータはロジスティック（logistic regression）回帰を使って予測し、各ツイートが 1 か 0 か（Ŷ）を推測する。
+- コスト関数（cost）」で、予測（Ŷ）が正解（Y）にどれだけ近いかをチェックする。 
+- 間違いが多いならパラメータを調整して、もう一度予測して…を繰り返し、cost が最小になるまで学習
+- 最終的に新しい文章でも「特徴を取り出す → モデルに入れる → ポジティブ(1)/ネガティブ(0)を判定」できるようになる。
+<img width="1014" height="442" alt="image" src="https://github.com/user-attachments/assets/ec0ef82c-ee20-4319-a297-1a9767fe5339" />
+
+
+
+```python
+import random
+
+x = [
+    "I luv donuts",
+    "This sucks",
+]
+
+# 1=positive, 0=negative
+
+y = [1, 1, 1, 0, 0, 0]
+model_skill = 0.3
+
+for traing in range(1,6):
+  wrong = 0
+  for x, y in zip(X,Y)
+    y_hat = y if random.random() < skill else 1 - y
+    wrong +=(y_hat != y)
+
+```
+
+---
 
 ## HOW IT WORKS 
 <img width="2146" height="790" alt="image" src="https://github.com/user-attachments/assets/2a4320bc-4ce0-41dd-aec1-5a960e4c71e5" />
