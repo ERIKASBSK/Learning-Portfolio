@@ -49,6 +49,44 @@ for traing in range(1,6):
 2.As **|V| grows**, vectors become **more sparse** (mostly zeros) and the model needs **more parameters**.   
 3.More parameters → **longer training time** and **slower prediction**.
 
+```python
+import re
+
+tweets = [
+    "I am happy because I love NLP",
+    "I am sad because rain",
+    "NLP is fun"
+]
+
+def tokenize(text):
+    return re.findall(r"[a-z]+", text.lower())
+
+vocab = sorted({w for t in tweets for w in tokenize(t)})
+word2idx = {w: i for i, w in enumerate(vocab)}
+
+print("Vocabulary size |V| =", len(vocab))
+print("Vocab =", vocab)
+
+def vectorize_binary(text, word2idx):
+    vec = [0] * len(word2idx)
+    words = set(tokenize(text))  
+    for w in words:
+        if w in word2idx:
+            vec[word2idx[w]] = 1
+    return vec
+
+x0 = vectorize_binary(tweets[0], word2idx)
+print("\nTweet:", tweets[0])
+print("Vector:", x0)
+
+ones = sum(x0)
+zeros = len(x0) - ones
+print(f"Non-zero(1) = {ones}, Zero = {zeros}")
+
+n = len(vocab)
+print("\nLogReg params = n + 1 =", n + 1)
+```
+
 ## Note1 — Frequency Counts for Sentiment 
 Goal: Count how many times each word appears in positive tweets vs negative tweets, then use these counts as features for Logistic Regression.
 Steps
