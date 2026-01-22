@@ -359,13 +359,13 @@ qv = embed_query(model, q)
 
             st.divider()
 ```
-`for rank, i in enumerate(final_idx, 1):` Loop through the final picks and give each one a rank number starting from 1.
-`jp_text / source_tag / img = ...` Grab the JP text, source tag, and image link for that result.
-`score = float(data["emb"][i].dot(qv))` Recompute the cosine match score (dot product),  just for display.
-`with st.container():` Wrap one result into its own nice little UI block
-`st.markdown(...)` Print the rank + match percentage as the result title.
-`if img: try ... except ...` If there’s an image link, show it; if it’s broken, just show a small warning instead of crashing.
-`st.write(jp_text)` Show the actual meme text.
-`if source_tag: st.caption(...)` If there’s a source label, show it under the text.
-`st.divider()` Draw a line to separate this result from the next one.
+- `for rank, i in enumerate(final_idx, 1):` Loop through the final picks and give each one a rank number starting from 1.
+- `jp_text / source_tag / img = ...` Grab the JP text, source tag, and image link for that result.
+- `score = float(data["emb"][i].dot(qv))` Recompute the cosine match score (dot product),  just for display.
+- `with st.container():` Wrap one result into its own nice little UI block
+- `st.markdown(...)` Print the rank + match percentage as the result title.
+- `if img: try ... except ...` If there’s an image link, show it; if it’s broken, just show a small warning instead of crashing.
+- `st.write(jp_text)` Show the actual meme text.
+- `if source_tag: st.caption(...)` If there’s a source label, show it under the text.
+- `st.divider()` Draw a line to separate this result from the next one.
 
