@@ -1,21 +1,15 @@
 # Note 1 Naive Bayes for Tweet Sentiment 
 
-### What it does
-- A fast baseline classifier for sentiment: **positive vs negative**
-- “Naive” = assumes **words are independent** given the class
-
----
-
-### Step 1) Build counts
-- Split tweets into **positive corpus** and **negative corpus**
-- Build **vocabulary V** (all unique words)
-- Count occurrences:
-  - `count_pos(word)` = times word appears in positive tweets
-  - `count_neg(word)` = times word appears in negative tweets
+### Step 1) Build counts カウント作る
+Split tweets into **positive corpus** and **negative corpus**  
+Build **vocabulary V** (all unique words)  
+ Count occurrences:  
+`count_pos(word)` = times word appears in positive tweets （その単語がポジティブツイートに出る回数）  
+`count_neg(word)` = times word appears in negative tweets （その単語がネガティブツイートに出る回数）  
 
 Also count total words:
-- `N_pos` = total word tokens in positive corpus
-- `N_neg` = total word tokens in negative corpus  
+`N_pos` = total word tokens in positive corpus （ポジティブ側の総単語数 / トークン数）  
+`N_neg` = total word tokens in negative corpus  (ネガティブ側の総単語数 / トークン数）  
 <img width="914" height="458" alt="image" src="https://github.com/user-attachments/assets/24b8e5e7-c24c-4794-bf60-76004492b7f7" />
 
 Tweet:
@@ -48,6 +42,26 @@ $$
 
 So **1.4 > 1**, the tweet is **Positive** ✅
 
+```py
+import numpy as np
+
+P_pos = {"i": 0.20, "am": 0.20, "happy": 0.14, "learning": 0.10}
+P_neg = {"i": 0.20, "am": 0.20, "happy": 0.10, "learning": 0.10}
+tweet = ["i", "am", "happy", "today", "i", "am", "learning"]
+
+score = 1.0
+for w in tweet:
+    if w in P_pos and w in P_neg:     
+        score *= (P_pos[w] / P_neg[w])
+
+print("score =", score)
+print("Positive" if score > 1 else "Negative")
+```
+Result
+```
+score = 1.4000000000000001
+Positive
+```
 ---
 
 ### 2) Practical version (use logs to avoid overflow)
@@ -59,6 +73,28 @@ $$
 Decision rule:
 - `log(score) > 0` → **positive**
 - `log(score) < 0` → **negative**
+
+```py
+import numpy as np
+
+P_pos = {"i": 0.20, "am": 0.20, "happy": 0.14, "learning": 0.10}
+P_neg = {"i": 0.20, "am": 0.20, "happy": 0.10, "learning": 0.10}
+tweet = ["i", "am", "happy", "today", "i", "am", "learning"]
+
+log_score = 0.0
+for w in tweet:
+    if w in P_pos and w in P_neg: 
+        log_score += np.log(P_pos[w]) - np.log(P_neg[w])
+
+print("log(score) =", log_score)
+print("Positive" if log_score > 0 else "Negative")
+```
+Result
+```
+log(score) = 0.33647223662121273
+Positive
+```
+
 
 ---
 
