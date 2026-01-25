@@ -1,15 +1,10 @@
 
-# Note 1 Supervised Learning Training Loop
+## Note0  Supervised Learning Training Loop
 
 X → model(θ) → Ŷ → compare with Y → cost → update θ → repeat
 Turn text into numbers → guess → compare → fix mistakes → finally classify sentiment. 
 
-1.Build a vocabulary of all unique words  
-2.Convert each tweet into a sparse 0/1 vector showing which words appear   
-3.but a large vocabulary makes vectors long and slows training and prediction  
-
-
-- step 1 たくさんのツイート（X）を用意して、
+- たくさんのツイート（X）を用意して、
 - 「ポジティブ(1)」か「ネガティブ(0)」かの正解ラベル（Y）も一緒に教える。
 - コンピュータはロジスティック（logistic regression）回帰を使って予測し、各ツイートが 1 か 0 か（Ŷ）を推測する。
 - コスト関数（cost）」で、予測（Ŷ）が正解（Y）にどれだけ近いかをチェックする。 
@@ -22,27 +17,40 @@ Turn text into numbers → guess → compare → fix mistakes → finally classi
 ```python
 import random
 
-x = [
+X = [
     "I luv donuts",
     "This sucks",
 ]
 
-# 1=positive, 0=negative
+Y = [1, 0]
 
-y = [1, 1, 1, 0, 0, 0]
 model_skill = 0.3
 
-for traing in range(1,6):
-  wrong = 0
-  for x, y in zip(X,Y)
-    y_hat = y if random.random() < skill else 1 - y
-    wrong +=(y_hat != y)
+for training in range(1, 6):
+    wrong = 0
+
+    for text, y in zip(X, Y):
+        y_hat = y if random.random() < model_skill else 1 - y
+        wrong += (y_hat != y)
+
+    cost = wrong
+    print(f"Training {training}: cost={cost}, skill={model_skill:.2f}")
+
+    model_skill = min(0.95, model_skill + 0.15)
+
 
 ```
-
+Result
+```
+Training 1: cost=1, skill=0.30
+Training 2: cost=2, skill=0.45
+Training 3: cost=0, skill=0.60
+Training 4: cost=0, skill=0.75
+Training 5: cost=0, skill=0.90
+```
 ---
 
-## HOW IT WORKS 
+## Note1 Negative and Positive Frequencies
 <img width="2146" height="790" alt="image" src="https://github.com/user-attachments/assets/2a4320bc-4ce0-41dd-aec1-5a960e4c71e5" />
 
 1.Represent a tweet as a **|V|-dimensional 0/1 vector**, marking **1** for words that appear and **0** otherwise.  
@@ -50,44 +58,26 @@ for traing in range(1,6):
 3.More parameters → **longer training time** and **slower prediction**.
 
 ```python
-import re
+tweets = ["I am happy", "I am sad"]
 
-tweets = [
-    "I am happy because I love NLP",
-    "I am sad because rain",
-    "NLP is fun"
-]
+V = sorted(set(" ".join(tweets).lower().split()))
+print("Vocab:", V)
 
-def tokenize(text):
-    return re.findall(r"[a-z]+", text.lower())
+def vec(t):
+    words = t.lower().split()
+    return [1 if w in words else 0 for w in V]
 
-vocab = sorted({w for t in tweets for w in tokenize(t)})
-word2idx = {w: i for i, w in enumerate(vocab)}
+for t in tweets:
+    print(t, "->", vec(t))
 
-print("Vocabulary size |V| =", len(vocab))
-print("Vocab =", vocab)
-
-def vectorize_binary(text, word2idx):
-    vec = [0] * len(word2idx)
-    words = set(tokenize(text))  
-    for w in words:
-        if w in word2idx:
-            vec[word2idx[w]] = 1
-    return vec
-
-x0 = vectorize_binary(tweets[0], word2idx)
-print("\nTweet:", tweets[0])
-print("Vector:", x0)
-
-ones = sum(x0)
-zeros = len(x0) - ones
-print(f"Non-zero(1) = {ones}, Zero = {zeros}")
-
-n = len(vocab)
-print("\nLogReg params = n + 1 =", n + 1)
 ```
-
-## Note1 — Frequency Counts for Sentiment 
+Result
+```
+Vocab: ['am', 'happy', 'i', 'sad']
+I am happy -> [1, 1, 1, 0]
+I am sad -> [1, 0, 1, 1]
+```
+## Note2 Frequency Counts for Sentiment 
 Goal: Count how many times each word appears in positive tweets vs negative tweets, then use these counts as features for Logistic Regression.
 Steps
   1. Build a vocabulary (V)  *V = all unique words in the corpus (all tweets)
@@ -103,7 +93,9 @@ Steps
 | learning |                    1 |                    0 |
 | bad      |                    0 |                    2 |
 
-## Note2 — Frequency dictionary
+
+
+## Note3 Frequency dictionary
 
 Before: a tweet was a big vector with size V (very slow).  
 Now: a tweet becomes a small vector with size 3 (much faster).  
@@ -135,9 +127,31 @@ Key format:
 *A tweet can be represented as **[bias, positive-frequency-sum, negative-frequency-sum]**, enabling Logistic Regression with only **3 features**.
 ✅ **Key point:** The model can classify a tweet using only **three numbers**, instead of a **huge vector with thousands of dimensions**.
 
-## Note3 — Clean tweets before feeding them into the model
+```python
+freq = {
+    ("i", 1): 3, ("i", 0): 2,
+    ("love", 1): 4, ("love", 0): 0,
+    ("hate", 1): 0, ("hate", 0): 5,
+    ("this", 1): 1, ("this", 0): 4,
+}
 
-### 1) Stop Words 
+def tweet_to_3d(tweet):
+    words = tweet.lower().split()
+    pos_sum = sum(freq.get((w, 1), 0) for w in words)
+    neg_sum = sum(freq.get((w, 0), 0) for w in words)
+    return [1, pos_sum, neg_sum]  
+
+tweet = "I love this"
+print(tweet, "->", tweet_to_3d(tweet))
+```
+Result
+```
+I love this -> [1, 8, 6]
+```
+
+## Note4 Clean tweets before feeding them into the model
+
+### 1) Stop Words 不要語 / 不要語句
 very common words (e.g., *the, is, and*) that usually carry little meaning for NLP tasks.  
 They are often removed to reduce noise and speed up processing, especially in **bag-of-words / TF-IDF** models.  
 However removing them can hurt tasks like **sentiment** (e.g., *not good*), so it depends on the goal.
@@ -146,7 +160,7 @@ Typical handling: use a stop-word list + keep important exceptions like **negati
 - **Bag-of-Words (BoW)**: represents text as a vector of word counts (order is ignored).  
 - **TF-IDF**: reweights BoW by down-weighting common words and up-weighting informative ones.  
 
-### 2) Stemming 
+### 2) Stemming 語幹抽出 / 語幹化
 reduces words to a rough root form (e.g., *playing → play*, *studies → studi*).  
 shrink the vocabulary for **BoW/TF-IDF** models.  
 Downsides: stems can look “wrong” and may hurt meaning (not real words).  
@@ -154,9 +168,10 @@ Common stemmers: **Porter Stemmer**, **Snowball Stemmer**.
 
 - **Porter Stemmer**: a classic rule-based English stemmer that aggressively strips suffixes (fast but stems may look unnatural).  
 - **Snowball Stemmer**: an improved, more consistent version of Porter, with better rules and support for multiple languages.  
+<img width="1930" height="740" alt="image" src="https://github.com/user-attachments/assets/e3429ef4-d275-4e1f-8d89-ba33a2ee3a3d" />
 
 
-### 3) Punctuation removal
+### 3) Punctuation removal 句読点の削除
 deletes symbols like `.,!?` to clean text before vectorization.  
 *punctuation can sometimes carry meaning in sentiment (e.g., “Great!!!”, “Really?”).  
 
@@ -166,43 +181,164 @@ Handles and URLs usually don’t help sentiment → remove them
 ### 5) Lowercasing
 Treat GREAT / Great / great as the same word  
 
-### 6) Tokenizing (tokenization)  
+### 6) Tokenizing (tokenization)  分かち書き
 splits text into smaller units called **tokens** (words, subwords, or symbols).  
 - Example: `"I love NLP!" → ["I", "love", "NLP", "!"]`  
 
-<img width="1930" height="740" alt="image" src="https://github.com/user-attachments/assets/e3429ef4-d275-4e1f-8d89-ba33a2ee3a3d" />
 
-## Note4 — NLTK  
+## Note5 — NLTK  Natural Language Toolkit（自然言語処理ツールキット）
 A popular Python library for **NLP learning and prototyping**, 
 provides tools for **tokenization, stemming, stopwords, POS tagging, parsing**, and more.  
 It also includes **built-in corpora/datasets** (e.g., labeled tweets) for quick experiments.  
 Commonly used in courses and baseline pipelines before moving to larger frameworks.  
 
 ```python
-import nltk                                # Python library for NLP
-from nltk.corpus import twitter_samples    # sample Twitter dataset from NLTK
-import matplotlib.pyplot as plt            # library for visualization
-import random                              # pseudo-random number generator
+import re, string
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.tokenize import TweetTokenizer
+
+def preprocess(tweet):
+    tweet = re.sub(r'https?://\S+|www\.\S+', '', tweet)
+    tok = TweetTokenizer(preserve_case=False, strip_handles=True, reduce_len=True).tokenize(tweet)
+    sw = set(stopwords.words('english'))
+    stem = PorterStemmer().stem
+    return [stem(w) for w in tok if w not in sw and w not in string.punctuation]
+
+
+print(preprocess("Tuning GREAT AI model!!! @user1 https://example.com"))
+
 ```
-## Note5 — Create a feature matrix X for all training tweets
+
+Result
+```
+['tune', 'great', 'ai', 'model']
+```
+
+## Note6 Logistic Regression Overall 
+
+## 1) Preprocess the tweet (前処理)
+
+Clean the raw tweet into a list of normalized words (**tokens / トークン**): remove **stop words / ストップワード**, **punctuation / 句読点**, **handles / ハンドル**, **URLs / URL**, then apply **stemming / ステミング** and **lowercasing / 小文字化**.
+
+Example result:
+
+```text
+["tun", "ai", "great", "model"]
+```
+
+```python
+tokens = ["tun", "ai", "great", "model"]
+```
+
+---
+
+## 2) Extract features (特徴量)
+
+You turn the tokens into a numeric **feature vector / 特徴ベクトル**:
+
+$$
+x = [1,\ \text{pos}*{\text{sum}},\ \text{neg}*{\text{sum}}]
+$$
+
+* `1` = **bias / バイアス**
+* `pos_sum` = total counts from **positive tweets / ポジティブ**
+* `neg_sum` = total counts from **negative tweets / ネガティブ**
+  (using a **frequency dictionary / 頻度辞書** `freqs[(word,label)]`)
+
+```python
+x = [1, 3476, 245]
+```
+
+---
+
+## 3) Compute the score (z) (内積)
+
+Logistic regression uses **parameters / パラメータ** (\theta) and computes a **dot product / 内積**:
+
+$$
+z = \theta^T x
+$$
+
+```python
+import numpy as np
+theta = np.array([0.00003, 0.00150, -0.00120])
+x = np.array([1, 3476, 245])
+z = theta @ x
+print(theta)
+```
+Result
+```
+[ 3.0e-05  1.5e-03 -1.2e-03]
+```
+---
+
+## 4) Convert score to probability (確率)
+
+Apply the **sigmoid function / シグモイド関数**:
+
+$$
+\sigma(z)=\frac{1}{1+e^{-z}}
+$$
+
+This outputs a **probability / 確率** between 0 and 1.
+
+```python
+import numpy as np
+z = 4.92
+p = 1 / (1 + np.exp(-z))
+print(p)   
+```
+Result
+```
+0.9927537604041685
+```
+---
+
+## 5) Classify with a threshold (閾値)
+
+Use a **threshold / 閾値** (usually 0.5):
+
+* if $(p \ge 0.5)$ → **positive**
+* if $(p < 0.5)$ → **negative**
+
+Equivalent shortcut:
+
+* if $(z \ge 0)$ → **positive**
+* if $(z < 0)$ → **negative**
+
+```python
+z = 4.92
+pred = 1 if z >= 0 else 0
+print(pred)  
+```
+Result
+```
+1
+```
+---
+
+## Final picture (行列 X)
+
+Do this for **m tweets / m個のツイート**, stack rows into **matrix X / 行列X** with shape **(m, 3)**.
+
+
+## Note7  BIAS
+
 ### 1) What is BIAS
 
 Bias is the model’s baseline score, which makes it easier to adjust predictions and separate positive vs. negative cases
 In Logistic Regression, it’s the intercept (represented by adding a feature `x₀ = 1`).  
 It helps the decision boundary move instead of being forced through the origin.  
-- `score = (bias×w0) + (pos_sum×w1) + (neg_sum×w2)`
+```
+x = [1, pos_sum, neg_sum]
+```
+```
+z = θ0*1 + θ1*pos_sum + θ2*neg_sum
+```
 
-### 2) The whole process
-1. Raw tweet
-   `I am Happy Because i am learning NLP @deeplearning`  
-2. Preprocessing(remove stopwords / handles / punctuation + stemming + lowercase)
-   `[happy, learn, nlp]`
-3. Feature Extraction
-   `[bias, sum_pos, sum_neg]`
 
-<img width="993" height="1108" alt="image" src="https://github.com/user-attachments/assets/e967a30e-a175-4cc6-9080-aba7a5a19d2c" />
-
-## Note6 — Sigmoid
+## Note8  Sigmoid(Detailed)
 Sigmoid squashes any number into 0 to 1  
 
 $$
@@ -363,49 +499,88 @@ $$
 - accuracy = 0.5 → 50% correct (about as good as random guessing)
 - accuracy = 0.8 → 80% correct (pretty good)
 
-## Note8 — Logistic Regression Cost Function
+## Note8 — Cost Function
 
-#### 1) What is Logistic Regression Cost Function
-- The **cost function** measures **how wrong** my model is
-- It sums up how far the predicted probabilities are from the true labels across all examples, so training can use **gradient descent** to minimize it.
+## What does each symbol mean in the formula? （式の記号の意味）
 
-$$
-J(\theta) = -\frac{1}{m}\sum_{i=1}^{m}\Big(y^{(i)}\log(h^{(i)}) + (1-y^{(i)})\log(1-h^{(i)})\Big)
-$$
-
-- Average loss over **m** examples.
-#### 2) Single example intuition
-- Single example intuition = understanding how the cost behaves on just one training example.
-
-- Case 1: 
-
-$$ 
-\(y=1\)
-$$
 
 $$
-\[
-\text{cost}=-\log(h)
-\]
+J(\theta)=-\frac{1}{m}\sum_{i=1}^{m}\Big[y^{(i)}\log(h^{(i)})+(1-y^{(i)})\log(1-h^{(i)})\Big]
 $$
 
-If you predict h = 0.99 → great, you’re almost correct (tiny cost).
-If you predict h = 0.01 → you’re confidently wrong (huge cost).
 
-- Case 2:
+* **$$J(\theta)$$**: total loss / cost function （総損失 / コスト関数）
+* **$$m$$**: number of training examples （データ数 / サンプル数）
+* **$$y^{(i)}$$**: true label (0 or 1) （正解ラベル）
+* **$$h(x^{(i)},\theta)=h^{(i)}$$**: predicted probability of class 1 (often written as $$p$$) （予測確率）
+* **$$\log$$**: logarithm （対数）
 
-$$ 
-\(y=0\)
-$$ 
+---
 
-$$ 
-\[
-\text{cost}=-\log(1-h)
-\]
+Understand it with numbers (数字で理解)
+
+Assume the true label is $$y=0$$ (negative / ネガティブ):
+
+### Case 1: You also think it’s negative 
+
+$$
+p=0.1 \Rightarrow 1-p=0.9
 $$
 
-If you predict h = 0.01 → great, you’re almost correct (tiny cost).
-If you predict h = 0.99 → you’re confidently wrong (huge cost).
+$$
+loss=-\log(1-p)=-\log(0.9)\approx 0.105
+$$
+
+Small penalty (損失が小さい)
+
+### Case 2: You are very sure it’s positive ❌
+$$
+p=0.99 \Rightarrow 1-p=0.01
+$$
+
+$$
+loss=-\log(1-p)=-\log(0.01)\approx 4.605
+$$
+
+Huge penalty (損失が爆増)
+
+---
+
+## Numeric Python examples 
+
+```python
+import numpy as np
+
+ps = [0.01, 0.1, 0.5, 0.9, 0.99]
+print("p    loss(y=1)=-log(p)   loss(y=0)=-log(1-p)")
+for p in ps:
+    print(f"{p:<4} {(-np.log(p)):<18.4f} {(-np.log(1-p)):<.4f}")
+```
+Result
+```
+p    loss(y=1)=-log(p)   loss(y=0)=-log(1-p)
+0.01 4.6052             0.0101
+0.1  2.3026             0.1054
+0.5  0.6931             0.6931
+0.9  0.1054             2.3026
+0.99 0.0101             4.6052
+```
+---
+
+## Compute average cost for a batch
+
+```python
+import numpy as np
+p = np.array([0.3,0.8,0.5,0.2,0.9])
+y = np.array([0,  1,  1,  0,   1])
+loss = -(y*np.log(p) + (1-y)*np.log(1-p))
+print(loss, loss.mean())
+```
+Result
+```
+[0.35667494 0.22314355 0.69314718 0.22314355 0.10536052] 0.32029394855698473
+```
+---
 
 ## Note9 — Overview
 
