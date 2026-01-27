@@ -1,19 +1,56 @@
-# Note 1 - Co-occurrence
+# Note 1 - Co-occurrence  (共起 / 共現)
 
-## What this part is doing
-Goal: **turn text into vectors** → so I can compute **similarity** between words / documents.
+**turn text into vectors** → so I can compute **similarity** between words / documents.
 
 Two common setups:
 1. **word × word**
 2. **word × document**
 
+```py
+sent = "you eat cereal from a bowl".split()
+W = 2  
+
+def context(word):
+    i = sent.index(word)
+    near = []
+    for j in range(max(0, i-W), min(len(sent), i+W+1)):
+        if j != i:
+            near.append(sent[j])
+    return near
+
+print("cereal ->", context("cereal"))
+print("bowl   ->", context("bowl"))
+```
+Result
+```
+cereal -> ['you', 'eat', 'from', 'a']
+bowl   -> ['from', 'a']
+```
 ---
 
 ## 1) Co-occurrence = “appearing near each other”
 Two words **co-occur** if they show up close to each other inside a window.
 
-- **window size = k**
-- if `k = 2`, then words within **1–2 tokens apart** count as co-occurring
+-If the **window size** is `k`:
+- up to `k` words to the left, and
+- up to `k` words to the right
+of the target word.
+
+```python
+sent = "A B C D E".split()
+k = 2  # window size
+
+i = sent.index("C")  
+neighbors = sent[max(0, i-k):i] + sent[i+1:i+k+1]
+
+print(neighbors)
+```
+
+Result
+
+```text
+['A', 'B', 'D', 'E']
+```
 
 ---
 
@@ -24,90 +61,155 @@ I build a matrix **M**:
 - column = **context word**
 - cell value = **how many times context appears near target (within k)**
 
-### Formula
-
-$$
-\[
-M_{i,j} = \text{count}(w_i \text{ occurs near } w_j \text{ within window } k)
-\]
-$$
-
-### What this means in my head
 A word is basically defined by its **neighbors**.  
 More shared neighbors → more similar meaning/usage.
 
-### Python (build word×word co-occurrence)
 ```python
-import numpy as np
+sents = ["I like simple data".split(), "I prefer simple raw data".split()]
+cols  = ["simple","raw","like","I"]
+k = 2
 
-text = "I like raw data and simple data"
-tokens = text.lower().split()
+counts = {c:0 for c in cols}
+for sent in sents:
+    if "data" in sent:
+        i = sent.index("data")
+        neighbors = sent[max(0,i-k):i] + sent[i+1:i+k+1]
+        for w in neighbors:
+            if w in counts:
+                counts[w] += 1
 
-def build_cooc(tokens, k=2):
-    vocab = sorted(set(tokens))
-    word2id = {w:i for i,w in enumerate(vocab)}
-    n = len(vocab)
-    M = np.zeros((n, n), dtype=int)
-
-    for i, w in enumerate(tokens):
-        wi = word2id[w]
-        left = max(0, i-k)
-        right = min(len(tokens), i+k+1)
-
-        for j in range(left, right):
-            if j == i:
-                continue
-            cj = word2id[tokens[j]]
-            M[wi, cj] += 1
-
-    return M, vocab, word2id
-
-M, vocab, word2id = build_cooc(tokens, k=2)
-vocab, M
+print([counts[c] for c in cols])
 ```
-# NOTE 2 - Example: vector for data
-Assume my context vocab is:
 
-- `simple`
-- `raw`
-- `like`
-- `I`
-
-With window size **k = 2**, I observe:
-
-- `data` near `simple` → **2**
-- `data` near `raw` → **1**
-- `data` near `like` → **1**
-- `data` near `I` → **0**
-
+```text
+[2, 1, 1, 0]
+```
 <img width="977" height="331" alt="image" src="https://github.com/user-attachments/assets/7fc8b167-a9e1-4347-91d1-337319d35c8d" />
 
-So:
+## 3) Word-by-Document
 
-$$
-\[
-\vec{data} = [2,\;1,\;1,\;0]
-\]
-$$
+- Instead of comparing word vs. word, comparing how often a word appears across different document categories (カテゴリ)    
 
-**Interpretation:**  
-`data` = a summary of who it keeps showing up with.
+Entertainment    
+Economy    
+Machine Learning    
 
-### Python (inspect the vector of `"data"`)
+- Then pick a few words and count their occurrences (出現回数) in each category:    
+
+data（データ） appears `500 times` in Entertainment（エンタメ）, `6,620 times` in Economy（経済）, and `9,320 times` in Machine Learning
+
+film（映画） appears `7,000 times` in Entertainment（エンタメ）, `4,000 times` in Economy（経済）, and `1,000 times` in Machine Learning
+
+- Treat each category as a vector:    
+
+Entertainment = `data=500, film=7000`    
+
+Economy = `data=6620, film=4000`    
+
+Machine Learning = `data = 9320, film = 1000`    
+
 ```python
-data_vec = M[word2id["data"]]
-list(zip(vocab, data_vec))
+docs = {
+  "Entertainment": ["data film data", "film film"],
+  "Economy": ["data data", "film data"],
+  "Machine Learning": ["data data data", "data"]
+}
+words = ["data","film"]
+
+for cat, texts in docs.items():
+    text = " ".join(texts).split()
+    print(cat, [text.count(w) for w in words])
+```
+
+```text
+Entertainment [2, 3]
+Economy [3, 1]
+Machine Learning [4, 0]
 ```
 
 ---
 
-## Dimension size
+## 4) Dimension size
 If my vocabulary size is **n**, then each word vector is **n-dimensional**.  
 That’s why later we often need **dimensionality reduction**.
 
 ---
 
-## 3) Why vectors let me compare similarity
+## 5) Euclidean Distance
+
+Used to measure how far apart **two points** or **two vectors**（ベクトル） are. Smaller = more similar; larger = more different.
+
+```math
+d(A,B)=\sqrt{\sum_{i=1}^{n}(B_i-A_i)^2}
+```
+
+```math
+\text{(2D)}\quad d(A,B)=\sqrt{(B_1-A_1)^2+(B_2-A_2)^2}
+```
+
+2D = 2 features (条件/特徴)    
+nD = n features (条件/特徴)    
+Each time you add one more feature, you add one more $((\text{difference})^2)$ term into the distance.    
+
+---
+
+### Example 1 Corpus A vs Corpus B
+
+A = (500, 7000), B = (9320, 1000)
+
+```math
+d(A,B)=\sqrt{(9320-500)^2+(1000-7000)^2}
+=\sqrt{8820^2+(-6000)^2}
+=\sqrt{77792400+36000000}
+=\sqrt{113792400}\approx 10667.08
+```
+
+<img width="902" height="395" alt="image" src="https://github.com/user-attachments/assets/b40af5c9-77f6-440e-86d0-404dab6ff029" />
+
+```python
+import numpy as np
+
+A = np.array([500, 7000])
+B = np.array([9320, 1000])
+
+d = np.linalg.norm(B - A)
+print(d)
+
+```
+Result
+```
+10667.0833
+```
+---
+
+### Example 2  boba vs ice-cream
+
+w = (0,4,6), v = (1,6,8)
+
+```math
+d(v,w)=\sqrt{(1-0)^2+(6-4)^2+(8-6)^2}
+=\sqrt{1^2+2^2+2^2}
+=\sqrt{1+4+4}
+=\sqrt{9}=3
+```
+<img width="951" height="290" alt="image" src="https://github.com/user-attachments/assets/1b70da6a-c8e1-4f25-93c2-510e0e75e623" />
+
+```python
+import numpy as np
+
+w = np.array([0, 4, 6])
+v = np.array([1, 6, 8])
+
+d = np.linalg.norm(v - w)
+print(d)
+```
+Result
+
+```
+3.0
+```
+
+## 6) Cosine similarity
 Once everything is a vector, similarity becomes geometry:
 
 - vectors close → distribution is similar → meaning/topic is similar
@@ -142,16 +244,6 @@ d(\vec a,\vec b)=\sqrt{\sum_i (a_i-b_i)^2}
 \]
 $$
 
-### Python (euclidean distance)
-```python
-def euclidean(a, b):
-    a = a.astype(float)
-    b = b.astype(float)
-    return float(np.linalg.norm(a - b))
-
-euclidean(M[word2id["data"]], M[word2id["simple"]])
-```
-<img width="1007" height="477" alt="image" src="https://github.com/user-attachments/assets/343bd778-be82-4282-9505-faff96c1126a" />
 
 ---
 
@@ -175,75 +267,6 @@ nearest_neighbors("data", M, vocab, word2id, topk=5)
 
 ---
 
-## 4) Word × Document matrix (word-to-category/topic)
-This version doesn’t focus on neighbors.  
-It asks:
-
-> how often does a word appear in different document categories?
-
-Example categories:
-- entertainment
-- economy
-- machine learning
-
-Example matrix:
-
-| word | entertainment | economy | ML |
-|---|---:|---:|---:|
-| data | 500 | 6620 | 9320 |
-| film | 7000 | 4000 | 1000 |
-
-Two ways to treat vectors:
-
-### (A) Word vectors (take a row)
-
-$$
-\[
-\vec{data} = [500,\;6620,\;9320]
-\]
-\[
-\vec{film} = [7000,\;4000,\;1000]
-\]
-$$
-
-### (B) Topic/document vectors (take a column)
-Using `data` and `film` as 2D axes:
-
-$$
-\[
-\vec{entertainment} = [500,\;7000]
-\]
-\[
-\vec{economy} = [6620,\;4000]
-\]
-\[
-\vec{ML} = [9320,\;1000]
-\]
-$$
-
-### Python (word×document with pandas)
-```python
-import pandas as pd
-
-df = pd.DataFrame(
-    {
-        "entertainment": {"data": 500, "film": 7000},
-        "economy": {"data": 6620, "film": 4000},
-        "ML": {"data": 9320, "film": 1000},
-    }
-).fillna(0)
-
-df
-```
-
-### Python (compare topic vectors)
-```python
-ent_vec = df["entertainment"].to_numpy()
-eco_vec = df["economy"].to_numpy()
-ml_vec  = df["ML"].to_numpy()
-
-cosine(eco_vec, ml_vec), cosine(ent_vec, ml_vec)
-```
 
 ---
 
