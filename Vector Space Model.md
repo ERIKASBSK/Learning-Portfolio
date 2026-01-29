@@ -333,12 +333,6 @@ Euclid d(Agriculture,History) = 22.360679774997898
 Cos   cos(Food,Agriculture) = 0.9899494936611665
 Cos   cos(Agriculture,History) = 0.8682431421244591
 ```
-
-Expected key numbers:
-
-* (d(F,A)\approx 29.1548), (d(A,H)\approx 22.3607)
-* (\cos(F,A)\approx 0.9899), (\cos(A,H)\approx 0.8682)
-
 ---
 
 ## Bonus: nearest neighbors (who is most similar to a word?)
