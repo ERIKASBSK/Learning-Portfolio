@@ -34,9 +34,9 @@ Imagine:
 ```PY
 import numpy as np
 
-X = np.array([[1,1],[2,1],[3,2],[4,3],[5,3]], dtype=float)  # n×d
-mu = X.mean(axis=0)      # (d,)
-Xc = X - mu              # n×d
+X = np.array([[1,1],[2,1],[3,2],[4,3],[5,3]], dtype=float)  
+mu = X.mean(axis=0)      
+Xc = X - mu              
 ```
 ### Covariance (共分散行列)
 
@@ -56,7 +56,14 @@ C = (Xc.T @ Xc) / n       # d×d
 ```math
 C v_i=\lambda_i v_i
 ```
+```PY
+eigvals, eigvecs = np.linalg.eigh(C)   
+i = 0
+vi = eigvecs[:, i]
+lam = eigvals[i]
 
+np.allclose(C @ vi, lam * vi)        
+```
 * **PC1** = $(v_1) (largest (\lambda))$
 * **PC2** = $(v_2) (2nd largest (\lambda), orthogonal to (v_1))$
 
@@ -65,6 +72,11 @@ C v_i=\lambda_i v_i
 -Reduce high-dimensional vectors to 2D so they can be plotted and clusters can be seen
 ```math
 W=[v_1\ v_2],\quad Z=X_c W
+```
+
+```PY
+W = np.column_stack((v1, v2))
+Z = Xc @ W
 ```
 
 ---
