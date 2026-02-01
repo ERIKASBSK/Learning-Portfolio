@@ -268,7 +268,118 @@ z_1=x_c\cdot PC1,\quad z_2=x_c\cdot PC2
 | (4,3)    | (1,1)          |  1.37638192 |  0.32491970 |
 | (5,3)    | (2,1)          |  2.22703273 | -0.20081141 |
 
+
+# Note 2 The Rotation Matrix - Counterclockwise Rotation
+
+
+## 1) Core
+- **Rotation matrix (回転行列)**: rotate the axes by a chosen angle $$\beta$$ (manual rotation).
+- **PCA (Principal Component Analysis / 主成分分析)**: the data *decides* the best rotation. It finds the two directions where the data spreads the most:
+  - $$PC1$$ = most spread direction  
+  - $$PC2$$ = next most spread direction, **orthogonal (直交)** to $$PC1$$
+- In 2D, PCA’s $$W=[v_1\ v_2]$$ behaves like a “data-driven rotation / change-of-basis”.
+
+---
+
+## 2) Math
+
+### Rotation matrix (回転行列)
+```math
+\begin{bmatrix}x'\\y'\end{bmatrix}
+=
+\begin{bmatrix}
+\cos\beta & -\sin\beta\\
+\sin\beta & \cos\beta
+\end{bmatrix}
+\begin{bmatrix}x\\y\end{bmatrix}
+```
+
+---
+
+## 3) Numeric sample (same numbers as before)
+
+### Data
+```math
+X=\{(1,1),(2,1),(3,2),(4,3),(5,3)\},\quad n=5
+```
+
+### Mean
+```math
+\mu=\left(\frac{1+2+3+4+5}{5},\ \frac{1+1+2+3+3}{5}\right)=(3,2)
+```
+
+### Centered data
+```math
+X_c=\{(-2,-1),(-1,-1),(0,0),(1,1),(2,1)\}
+```
+
+### Covariance
+```math
+C=
+\begin{bmatrix}
+2.0 & 1.2\\
+1.2 & 0.8
+\end{bmatrix}
+```
+
+```math
+PC1\approx(0.85065081,\ 0.52573111),\quad
+PC2\approx(-0.52573111,\ 0.85065081)
+```
+
+Treat $$\cos\beta=0.85065081,\ \sin\beta=0.52573111$$:
+```math
+R=
+\begin{bmatrix}
+0.85065081 & -0.52573111\\
+0.52573111 & 0.85065081
+\end{bmatrix}
+```
+
+Rotate the centered point $$(x,y)=(-2,-1)$$:
+```math
+x' = x\cos\beta-y\sin\beta
+= (-2)(0.85065081)-(-1)(0.52573111)
+= -1.17557051
+```
+
+```math
+y' = x\sin\beta+y\cos\beta
+= (-2)(0.52573111)+(-1)(0.85065081)
+= -1.90211303
+```
+
+---
+
+
+```python
+import numpy as np
+
+X = np.array([[1,1],[2,1],[3,2],[4,3],[5,3]], float)
+mu = X.mean(axis=0)
+Xc = X - mu
+C  = (Xc.T @ Xc) / Xc.shape[0]
+
+eigvals, eigvecs = np.linalg.eigh(C)
+PC1 = eigvecs[:, eigvals.argsort()[::-1][0]]
+
+c, s = PC1[0], PC1[1]
+R = np.array([[c, -s],[s, c]])
+
+print(np.array([-2., -1.]) @ R)
+
+```
+Result
+
+```
+[ 2.22703273 -0.20081142]
+
+```
+
+
+
 MY MOOD:  
 <img width="702" height="683" alt="image" src="https://github.com/user-attachments/assets/c72900bf-b8ca-4475-8018-d1291ce07967" />
 
+<img width="1536" height="1024" alt="3df65118-2d32-4cb1-85c4-9eb9592586a3" src="https://github.com/user-attachments/assets/e0d7ff76-a037-4258-a6f5-dd83ff328b1b" />
 
